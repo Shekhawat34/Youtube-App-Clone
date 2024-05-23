@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../designs/play_button_paint.dart';
+import '../model/recommended_video_model.dart';
 import '../provider/video_provider.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -34,7 +37,11 @@ class _VideoScreenState extends State<VideoScreen> {
       ),
     );
     _videoDetailsFuture = Provider.of<VideoProvider>(context, listen: false).fetchVideoDetails(widget.videoId);
+
     _controller.addListener(_onPlayerStateChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<VideoProvider>(context, listen: false).fetchRecommendedVideos();
+    });
   }
 
   @override
@@ -124,14 +131,18 @@ class _VideoScreenState extends State<VideoScreen> {
                                   _buildInteractionRow(),
                                   const SizedBox(height: 8),
                                   _buildSubscribeSection(),
+                                  const SizedBox(height: 16,),
+
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ),
+                      _buildRecommendedVideosSection(),
                     ],
                   ),
+
                 ),
                 Positioned(
                   top: 8,
@@ -309,4 +320,114 @@ class _VideoScreenState extends State<VideoScreen> {
       ],
     );
   }
+
+  Widget _buildRecommendedVideosSection(){
+    return Consumer<VideoProvider>(
+      builder: (context, videoProvider, child) {
+        if (videoProvider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.red),
+          );
+        }
+        if (videoProvider.recommendedVideos.isEmpty) {
+          return const Center(
+            child: Text(
+              'No recommended videos available',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: videoProvider.recommendedVideos.length,
+          itemBuilder: (context, index) {
+            final recommendedVideo = videoProvider.recommendedVideos[index];
+            return _buildVideoCard(context, recommendedVideo);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildVideoCard(BuildContext context, RecommendedVideo recommendedVideo) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VideoScreen(videoId: recommendedVideo.id),
+          ),
+        );
+      },
+      child: Card(
+        color: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.0),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: recommendedVideo.thumbnailUrl,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(color: Colors.red),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recommendedVideo.title,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          recommendedVideo.channelTitle,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                top: 5,
+                right: 10,
+                child: CustomPaint(
+                  size: Size(40, 40),
+                  painter: PlayButtonPainter(),
+                  child: Center(
+                    child: Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.red,
+                      size: 44,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 }

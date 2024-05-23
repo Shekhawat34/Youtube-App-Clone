@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:youtube_app/screen/videoScreen.dart';
 import 'package:youtube_app/screen/searchScreen.dart';
 import '../designs/play_button_paint.dart';
@@ -15,13 +16,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearchActive = false;
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  bool _isInitializing = false;
+  String _voiceInput = '';
 
   @override
   void initState() {
     super.initState();
+    _speech = stt.SpeechToText();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<VideoProvider>(context, listen: false).fetchRecommendedVideos();
     });
+  }
+
+  Future<void> _listen() async {
+    if (!_isInitializing && !_isListening) {
+      _isInitializing = true;
+      bool available = await _speech.initialize(
+        onStatus: (status) => print('onStatus: $status'),
+        onError: (error) => print('onError: $error'),
+      );
+      _isInitializing = false;
+
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _voiceInput = val.recognizedWords;
+            _searchController.text = _voiceInput;
+          }),
+        );
+      } else {
+        setState(() => _isListening = false);
+        _speech.stop();
+      }
+    }
   }
 
   @override
@@ -34,8 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
-                // _buildHorizontalList(),
-                // _buildCategoryChips(),
                 _buildRecommendedVideos(),
               ],
             ),
@@ -55,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Image.asset(
             'assets/images/youtube_logo.jpg',
-            height: 50,
+            height: 34,
           ),
           const Spacer(),
           GestureDetector(
@@ -65,6 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             child: const Icon(Icons.search, color: Colors.white, size: 30),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _listen,
+            child: const Icon(Icons.mic, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 10),
           const Icon(Icons.cast, color: Colors.white70),
@@ -91,14 +124,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchField() {
     return AnimatedPositioned(
       duration: Duration(milliseconds: 300),
-      top: _isSearchActive ? 0.0 : 0,
+      top: _isSearchActive ? 6.0 : 0,
       left: 0,
       right: 0,
       child: AnimatedOpacity(
         duration: Duration(milliseconds: 300),
         opacity: _isSearchActive ? 1.0 : 0.0,
         child: Container(
-          color: Colors.black12,
+          color: Colors.black26,
           padding: EdgeInsets.symmetric(horizontal: 16.0),
           child: TextField(
             controller: _searchController,
@@ -133,40 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
-
-  // Widget _buildHorizontalList() {
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.horizontal,
-  //     child: Row(
-  //       children: List.generate(10, (index) {
-  //         return const Padding(
-  //           padding: EdgeInsets.all(8.0),
-  //           child: CircleAvatar(
-  //             backgroundImage: AssetImage("assets/images/youtube_logo.jpg"),
-  //           ),
-  //         );
-  //       }),
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildCategoryChips() {
-  //   return SingleChildScrollView(
-  //     scrollDirection: Axis.horizontal,
-  //     child: Row(
-  //       children: ['All', 'Game', 'UI', 'Figma', 'UI Designer', 'UX', 'Mixes', 'Mobile App']
-  //           .map((category) {
-  //         return Padding(
-  //           padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //           child: Chip(
-  //             label: Text(category, style: const TextStyle(color: Colors.white)),
-  //             backgroundColor: Colors.grey,
-  //           ),
-  //         );
-  //       }).toList(),
-  //     ),
-  //   );
-  // }
 
   Widget _buildRecommendedVideos() {
     return Consumer<VideoProvider>(
