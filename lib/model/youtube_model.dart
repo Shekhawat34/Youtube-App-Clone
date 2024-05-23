@@ -5,7 +5,7 @@ class Video {
   final String thumbnailUrl;
   final String channelTitle;
   final String channelId;
-  final String publishedAt;
+  final DateTime publishedAt;
   final int viewCount;
   final int likeCount;
   final int dislikeCount;
@@ -25,16 +25,16 @@ class Video {
 
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
-      id: json['id']['videoId'],
-      title: json['snippet']['title'],
-      description: json['snippet']['description'],
-      thumbnailUrl: json['snippet']['thumbnails']['high']['url'],
-      channelTitle: json['snippet']['channelTitle'],
-      channelId: json['snippet']['channelId'],
-      publishedAt: json['snippet']['publishedAt'],
-      viewCount: json['statistics'] != null ? int.parse(json['statistics']['viewCount'] ?? '0') : 0,
-      likeCount: json['statistics']!= null ? int.parse(json['statistics']['likeCount'] ?? '0') : 0,
-      dislikeCount: json['statistics']!= null ? int.parse(json['statistics']['dislikeCount'] ?? '0') : 0,
+      id: json['id']['videoId'] as String,
+      title: json['snippet']['title'] as String,
+      description: json['snippet']['description'] as String,
+      thumbnailUrl: json['snippet']['thumbnails']['high']['url'] as String,
+      channelTitle: json['snippet']['channelTitle'] as String,
+      channelId: json['snippet']['channelId'] as String,
+      publishedAt: DateTime.parse(json['snippet']['publishedAt'] as String),
+      viewCount: json['statistics'] != null ? int.tryParse(json['statistics']['viewCount'] ?? '0') ?? 0 : 0,
+      likeCount: json['statistics'] != null ? int.tryParse(json['statistics']['likeCount'] ?? '0') ?? 0 : 0,
+      dislikeCount: json['statistics'] != null ? int.tryParse(json['statistics']['dislikeCount'] ?? '0') ?? 0 : 0,
     );
   }
 }

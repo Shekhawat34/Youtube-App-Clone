@@ -21,8 +21,8 @@ class Channel {
       title: json['snippet']['title'] as String,
       description: json['snippet']['description'] as String,
       thumbnailUrl: json['snippet']['thumbnails']['high']['url'] as String,
-      subscriberCount: (json['statistics']['subscriberCount'] as int?) ?? 0,
-      videoCount: (json['statistics']['videoCount'] as int?) ?? 0,
+      subscriberCount: int.tryParse(json['statistics']['subscriberCount'] ?? '0') ?? 0,
+      videoCount: int.tryParse(json['statistics']['videoCount'] ?? '0') ?? 0,
     );
   }
 }

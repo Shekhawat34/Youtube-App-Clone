@@ -83,39 +83,61 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Channels',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.video_library),
-            label: 'Library',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlue,
-        unselectedItemColor: Colors.white,
-        backgroundColor: Colors.black,
-        onTap: _onItemTapped,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.explore),
+              label: 'Explore',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Channels',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.video_library),
+              label: 'Library',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.red,
+          unselectedItemColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          type: BottomNavigationBarType.fixed,
+          onTap: _onItemTapped,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedFontSize: 12,
+          unselectedFontSize: 12,
+          elevation: 0,
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          print('floating action button pressed');
+        onPressed: () {
+          print('Floating action button pressed');
         },
-        child: Icon(Icons.add),
         backgroundColor: Colors.red,
+        child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
