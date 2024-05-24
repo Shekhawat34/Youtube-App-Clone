@@ -46,6 +46,7 @@ class MyApp extends StatelessWidget {
             videoId: ModalRoute.of(context)!.settings.arguments as String,
           ),
         },
+
       ),
     );
   }
@@ -62,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),
+    const HomeScreen(),
     const ExploreScreen(),
     // Placeholder for the ChannelScreen since channelId is required
     const Scaffold(
@@ -84,7 +85,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.black,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),

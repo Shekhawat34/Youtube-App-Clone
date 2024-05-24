@@ -15,6 +15,7 @@ class Channel {
     required this.videoCount,
   });
 
+  // Factory constructor for creating a new Channel instance from a JSON map.
   factory Channel.fromJson(Map<String, dynamic> json) {
     return Channel(
       id: json['id'] as String,

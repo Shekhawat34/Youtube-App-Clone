@@ -9,6 +9,8 @@ import '../model/recommended_video_model.dart';
 import '../provider/video_provider.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -123,16 +125,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSearchField() {
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       top: _isSearchActive ? 6.0 : 0,
       left: 0,
       right: 0,
       child: AnimatedOpacity(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         opacity: _isSearchActive ? 1.0 : 0.0,
         child: Container(
           color: Colors.black26,
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: TextField(
             controller: _searchController,
             style: const TextStyle(color: Colors.white),
@@ -183,20 +185,76 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: videoProvider.recommendedVideos.length,
-          itemBuilder: (context, index) {
-            final recommendedVideo = videoProvider.recommendedVideos[index];
-            return _buildVideoCard(context, recommendedVideo);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 1200) {
+              // Larger screens: 5 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else if (constraints.maxWidth > 768) {
+              // Tablets: 4 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else if (constraints.maxWidth > 480 && constraints.maxWidth <= 768) {
+              // Small tablets: 3 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else {
+              // Mobile: 1 video per row
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            }
           },
         );
       },
     );
   }
 
+
   Widget _buildVideoCard(BuildContext context, RecommendedVideo recommendedVideo) {
+    final isTablet = MediaQuery.of(context).size.width > 600;
+    final isLargeScreen = MediaQuery.of(context).size.width > 1200;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -226,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
                     width: double.infinity,
-                    height: 180,
+                    height: isLargeScreen ? 200 : isTablet ? 150 : 180,
                     fit: BoxFit.cover,
                   ),
                   const SizedBox(height: 8),
@@ -238,9 +296,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           recommendedVideo.title,
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -258,9 +317,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: 5,
                 right: 10,
                 child: CustomPaint(
-                  size: Size(40, 40),
+                  size: const Size(40, 40),
                   painter: PlayButtonPainter(),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.play_arrow_rounded,
                       color: Colors.red,
@@ -275,5 +334,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
 }

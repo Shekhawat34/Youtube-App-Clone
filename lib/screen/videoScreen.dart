@@ -42,6 +42,12 @@ class _VideoScreenState extends State<VideoScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<VideoProvider>(context, listen: false).fetchRecommendedVideos();
     });
+
+     // add video to history
+    _videoDetailsFuture.then((video) {
+      Provider.of<VideoProvider>(context, listen: false).addToHistory(video);
+    });
+
   }
 
   @override
@@ -154,7 +160,28 @@ class _VideoScreenState extends State<VideoScreen> {
                     },
                   ),
                 ),
-              ],
+                  Positioned(
+                  top: 8,
+                  right: 8,
+                  child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                  if (value == 'save') {
+                  Provider.of<VideoProvider>(context, listen: false).saveVideo(videoDetails);
+                  }
+                  },
+                  itemBuilder: (BuildContext context) {
+                  return [
+                  const PopupMenuItem(
+                  value: 'save',
+                  child: Text('Save Video'),
+                  ),
+                  ];
+                  },
+
+                   ),
+          ),
+          ],
             );
           }
         },
@@ -321,7 +348,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  Widget _buildRecommendedVideosSection(){
+  Widget _buildRecommendedVideosSection() {
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         if (videoProvider.isLoading) {
@@ -337,18 +364,71 @@ class _VideoScreenState extends State<VideoScreen> {
             ),
           );
         }
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: videoProvider.recommendedVideos.length,
-          itemBuilder: (context, index) {
-            final recommendedVideo = videoProvider.recommendedVideos[index];
-            return _buildVideoCard(context, recommendedVideo);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 1200) {
+              // Larger screens: 5 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else if (constraints.maxWidth > 768) {
+              // Tablets: 4 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else if (constraints.maxWidth > 480 && constraints.maxWidth <= 768) {
+              // Small tablets: 3 videos per row
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            } else {
+              // Mobile: 1 video per row
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: videoProvider.recommendedVideos.length,
+                itemBuilder: (context, index) {
+                  final recommendedVideo = videoProvider.recommendedVideos[index];
+                  return _buildVideoCard(context, recommendedVideo);
+                },
+              );
+            }
           },
         );
       },
     );
   }
+
 
   Widget _buildVideoCard(BuildContext context, RecommendedVideo recommendedVideo) {
     return GestureDetector(
@@ -412,9 +492,9 @@ class _VideoScreenState extends State<VideoScreen> {
                 top: 5,
                 right: 10,
                 child: CustomPaint(
-                  size: Size(40, 40),
+                  size: const Size(40, 40),
                   painter: PlayButtonPainter(),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.play_arrow_rounded,
                       color: Colors.red,
