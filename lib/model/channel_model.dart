@@ -19,11 +19,12 @@ class Channel {
   factory Channel.fromJson(Map<String, dynamic> json) {
     return Channel(
       id: json['id'] as String,
-      title: json['snippet']['title'] as String,
-      description: json['snippet']['description'] as String,
-      thumbnailUrl: json['snippet']['thumbnails']['high']['url'] as String,
+      title: json['snippet']['title'] as String? ?? '',
+      description: json['snippet']['description'] as String? ?? '',
+      thumbnailUrl: json['snippet']['thumbnails']['high']['url'] as String? ?? '',
       subscriberCount: int.tryParse(json['statistics']['subscriberCount'] ?? '0') ?? 0,
       videoCount: int.tryParse(json['statistics']['videoCount'] ?? '0') ?? 0,
     );
   }
+
 }

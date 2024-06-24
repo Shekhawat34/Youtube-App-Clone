@@ -284,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
                     width: double.infinity,
-                    height: isLargeScreen ? 200 : isTablet ? 150 : 180,
+                    height: isLargeScreen ? 300 : isTablet ? 250 : 220,
                     fit: BoxFit.cover,
                   ),
                   const SizedBox(height: 8),
@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 2),
                         Text(
                           recommendedVideo.channelTitle,
-                          style: const TextStyle(color: Colors.white70),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ],
                     ),

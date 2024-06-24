@@ -2,9 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:youtube_app/screen/channelScreen.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../designs/play_button_paint.dart';
-import '../model/recommended_video_model.dart';
+import '../model/youtube_model.dart';
 import '../provider/video_provider.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -19,11 +20,13 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   late YoutubePlayerController _controller;
   late Future<Map<String, dynamic>> _videoDetailsFuture;
+
   int _likeCount = 0;
   int _dislikeCount = 0;
   bool _isExpanded = false;
   bool _isLiked = false;
   bool _isDisliked = false;
+  bool _isFullScreen=false;
 
   @override
   void initState() {
@@ -34,20 +37,20 @@ class _VideoScreenState extends State<VideoScreen> {
         autoPlay: true,
         mute: false,
         forceHD: true,
+        useHybridComposition: true,
       ),
     );
     _videoDetailsFuture = Provider.of<VideoProvider>(context, listen: false).fetchVideoDetails(widget.videoId);
 
     _controller.addListener(_onPlayerStateChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<VideoProvider>(context, listen: false).fetchRecommendedVideos();
+      Provider.of<VideoProvider>(context, listen: false).fetchRelatedVideos(widget.videoId);
     });
 
-     // add video to history
+    // Add video to history
     _videoDetailsFuture.then((video) {
       Provider.of<VideoProvider>(context, listen: false).addToHistory(video);
     });
-
   }
 
   @override
@@ -59,8 +62,14 @@ class _VideoScreenState extends State<VideoScreen> {
   void _onPlayerStateChange() {
     if (_controller.value.isFullScreen) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      setState(() {
+        _isFullScreen=true;
+      });
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      setState(() {
+        _isFullScreen=false;
+      });
     }
   }
 
@@ -102,92 +111,107 @@ class _VideoScreenState extends State<VideoScreen> {
 
             return Stack(
               children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Card(
-                        color: Colors.black,
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        margin: const EdgeInsets.all(0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            YoutubePlayer(
-                              controller: _controller,
-                              showVideoProgressIndicator: true,
-                              onReady: () {
-                                _controller.addListener(() {});
-                              },
-                              progressIndicatorColor: Colors.red,
-                              progressColors: const ProgressBarColors(
-                                playedColor: Colors.red,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
+                YoutubePlayerBuilder(
+                  player: YoutubePlayer(
+                    controller: _controller,
+                    showVideoProgressIndicator: true,
+                    onReady: () {
+                      _controller.addListener(() {});
+                    },
+                    progressIndicatorColor: Colors.red,
+                    progressColors: const ProgressBarColors(
+                      playedColor: Colors.red,
+                    ),
+                  ),
+                  builder: (context, player) {
+                    return Column(
+                      children: [
+                        if (!_isFullScreen) // Show card only in normal mode
+                          Expanded(
+                            child: SingleChildScrollView(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildTitleSection(snippet),
-                                  if (_isExpanded) _buildExpandedSection(snippet, statistics),
-                                  const SizedBox(height: 4),
-                                  _buildInteractionRow(),
-                                  const SizedBox(height: 8),
-                                  _buildSubscribeSection(),
-                                  const SizedBox(height: 16,),
-
+                                  Card(
+                                    color: Colors.black,
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    margin: const EdgeInsets.all(0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(
+                                          height: MediaQuery.of(context).size.width*9/16,
+                                          child:player,
+                                        ),// Video player
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _buildTitleSection(snippet),
+                                              if (_isExpanded) _buildExpandedSection(snippet, statistics),
+                                              const SizedBox(height: 4),
+                                              _buildInteractionRow(),
+                                              const SizedBox(height: 8),
+                                              _buildSubscribeSection(),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _buildRelatedVideosSection(),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      _buildRecommendedVideosSection(),
-                    ],
-                  ),
-
+                          ),
+                      ],
+                    );
+                  },
                 ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
+                if (!_isFullScreen) // Show buttons only in normal mode
                   Positioned(
-                  top: 8,
-                  right: 8,
-                  child: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) {
-                  if (value == 'save') {
-                  Provider.of<VideoProvider>(context, listen: false).saveVideo(videoDetails);
-                  }
-                  },
-                  itemBuilder: (BuildContext context) {
-                  return [
-                  const PopupMenuItem(
-                  value: 'save',
-                  child: Text('Save Video'),
+                    top: 8,
+                    left: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  ];
-                  },
-
-                   ),
-          ),
-          ],
+                if (!_isFullScreen) // Show buttons only in normal mode
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      onSelected: (value) {
+                        if (value == 'save') {
+                          Provider.of<VideoProvider>(context, listen: false).saveVideo(videoDetails);
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          const PopupMenuItem(
+                            value: 'save',
+                            child: Text('Save Video'),
+                          ),
+                        ];
+                      },
+                    ),
+                  ),
+              ],
             );
           }
         },
       ),
     );
   }
+
 
   Widget _buildTitleSection(Map<String, dynamic> snippet) {
     return Row(
@@ -220,6 +244,23 @@ class _VideoScreenState extends State<VideoScreen> {
           snippet['description'] ?? 'No description available',
           style: const TextStyle(color: Colors.white),
           maxLines: 5,
+        ),
+        const SizedBox(height: 8,),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChannelScreen(
+                  channelId: snippet['channelId'] ??'', // Replace with actual channel ID
+                ),
+              ),
+            );
+          },
+          child: Text(
+            'Channel: ${snippet['channelTitle'] ?? 'N/A'}',
+            style: const TextStyle(color: Colors.blue),
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -348,7 +389,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  Widget _buildRecommendedVideosSection() {
+  Widget _buildRelatedVideosSection() {
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         if (videoProvider.isLoading) {
@@ -356,10 +397,10 @@ class _VideoScreenState extends State<VideoScreen> {
             child: CircularProgressIndicator(color: Colors.red),
           );
         }
-        if (videoProvider.recommendedVideos.isEmpty) {
+        if (videoProvider.relatedVideos.isEmpty) {
           return const Center(
             child: Text(
-              'No recommended videos available',
+              'No related videos available',
               style: TextStyle(color: Colors.white),
             ),
           );
@@ -375,10 +416,10 @@ class _VideoScreenState extends State<VideoScreen> {
                   crossAxisCount: 5,
                   childAspectRatio: 0.75,
                 ),
-                itemCount: videoProvider.recommendedVideos.length,
+                itemCount: videoProvider.relatedVideos.length,
                 itemBuilder: (context, index) {
-                  final recommendedVideo = videoProvider.recommendedVideos[index];
-                  return _buildVideoCard(context, recommendedVideo);
+                  final relatedVideo = videoProvider.relatedVideos[index];
+                  return _buildVideoCard(context, relatedVideo);
                 },
               );
             } else if (constraints.maxWidth > 768) {
@@ -390,10 +431,10 @@ class _VideoScreenState extends State<VideoScreen> {
                   crossAxisCount: 4,
                   childAspectRatio: 0.75,
                 ),
-                itemCount: videoProvider.recommendedVideos.length,
+                itemCount: videoProvider.relatedVideos.length,
                 itemBuilder: (context, index) {
-                  final recommendedVideo = videoProvider.recommendedVideos[index];
-                  return _buildVideoCard(context, recommendedVideo);
+                  final relatedVideo = videoProvider.relatedVideos[index];
+                  return _buildVideoCard(context, relatedVideo);
                 },
               );
             } else if (constraints.maxWidth > 480 && constraints.maxWidth <= 768) {
@@ -405,10 +446,10 @@ class _VideoScreenState extends State<VideoScreen> {
                   crossAxisCount: 3,
                   childAspectRatio: 0.75,
                 ),
-                itemCount: videoProvider.recommendedVideos.length,
+                itemCount: videoProvider.relatedVideos.length,
                 itemBuilder: (context, index) {
-                  final recommendedVideo = videoProvider.recommendedVideos[index];
-                  return _buildVideoCard(context, recommendedVideo);
+                  final relatedVideo = videoProvider.relatedVideos[index];
+                  return _buildVideoCard(context, relatedVideo);
                 },
               );
             } else {
@@ -416,10 +457,10 @@ class _VideoScreenState extends State<VideoScreen> {
               return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: videoProvider.recommendedVideos.length,
+                itemCount: videoProvider.relatedVideos.length,
                 itemBuilder: (context, index) {
-                  final recommendedVideo = videoProvider.recommendedVideos[index];
-                  return _buildVideoCard(context, recommendedVideo);
+                  final relatedVideo = videoProvider.relatedVideos[index];
+                  return _buildVideoCard(context, relatedVideo);
                 },
               );
             }
@@ -429,14 +470,13 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-
-  Widget _buildVideoCard(BuildContext context, RecommendedVideo recommendedVideo) {
+  Widget _buildVideoCard(BuildContext context, Video relatedVideo) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VideoScreen(videoId: recommendedVideo.id),
+            builder: (context) => VideoScreen(videoId: relatedVideo.id),
           ),
         );
       },
@@ -454,7 +494,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: recommendedVideo.thumbnailUrl,
+                    imageUrl: relatedVideo.thumbnailUrl,
                     placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(color: Colors.red),
                     ),
@@ -470,7 +510,7 @@ class _VideoScreenState extends State<VideoScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          recommendedVideo.title,
+                          relatedVideo.title,
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -480,7 +520,7 @@ class _VideoScreenState extends State<VideoScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          recommendedVideo.channelTitle,
+                          relatedVideo.channelTitle,
                           style: const TextStyle(color: Colors.white70),
                         ),
                       ],
@@ -509,5 +549,4 @@ class _VideoScreenState extends State<VideoScreen> {
       ),
     );
   }
-
 }

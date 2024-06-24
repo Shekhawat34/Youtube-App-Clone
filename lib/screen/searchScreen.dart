@@ -18,8 +18,9 @@ class SearchScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Search Results', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.black12,
+        title: const Text('search results', style: TextStyle(color: Colors.white)),
       ),
       body: Consumer<VideoProvider>(
         builder: (context, videoProvider, child) {
@@ -134,7 +135,7 @@ class SearchScreen extends StatelessWidget {
                     ),
                     errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
                     width: double.infinity,
-                    height: isLargeScreen ? 200 : isTablet ? 150 : 180,
+                    height: isLargeScreen ? 300 : isTablet ? 250 : 220,
                     fit: BoxFit.cover,
                   ),
                   const SizedBox(height: 8),
@@ -156,7 +157,7 @@ class SearchScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           video.channelTitle,
-                          style: const TextStyle(color: Colors.white70),
+                          style: const TextStyle(color: Colors.deepOrange),
                         ),
                       ],
                     ),

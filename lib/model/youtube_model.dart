@@ -1,3 +1,5 @@
+import 'comment_Model.dart';
+
 class Video {
   final String id;
   final String title;
@@ -9,6 +11,7 @@ class Video {
   final int viewCount;
   final int likeCount;
   final int dislikeCount;
+  final List<Comment> comments;
 
   Video({
     required this.id,
@@ -21,6 +24,7 @@ class Video {
     required this.viewCount,
     required this.likeCount,
     required this.dislikeCount,
+    required this.comments,
   });
 
   factory Video.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,7 @@ class Video {
       viewCount: json['statistics'] != null ? int.tryParse(json['statistics']['viewCount'] ?? '0') ?? 0 : 0,
       likeCount: json['statistics'] != null ? int.tryParse(json['statistics']['likeCount'] ?? '0') ?? 0 : 0,
       dislikeCount: json['statistics'] != null ? int.tryParse(json['statistics']['dislikeCount'] ?? '0') ?? 0 : 0,
+      comments: [] //Initialize comment list
     );
   }
 }

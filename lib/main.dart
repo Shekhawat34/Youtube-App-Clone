@@ -39,14 +39,11 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: const MainScreen(),
         routes: {
-          '/channel': (context) => ChannelScreen(
-            channelId: ModalRoute.of(context)!.settings.arguments as String,
-          ),
+          '/channel': (context) => const ChannelScreen(channelId:""),
           '/video': (context) => VideoScreen(
             videoId: ModalRoute.of(context)!.settings.arguments as String,
           ),
         },
-
       ),
     );
   }
