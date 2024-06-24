@@ -124,9 +124,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       itemCount: videos.length,
       itemBuilder: (context, index) {
         final video = videos[index];
-        final thumbnailUrl = video.thumbnailUrl ?? '';
-        final videoTitle = video.title ?? 'No title available';
-        final channel=video.channelTitle??'No channel available';
+        final thumbnailUrl = video.thumbnailUrl;
+        final videoTitle = video.title;
+        final channel=video.channelTitle;
         return GestureDetector(
           onTap: () {
             Navigator.push(
